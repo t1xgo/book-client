@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { BookService } from '../services/book.service';
+import { Book } from '../models/book.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -6,17 +8,10 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzCardModule } from 'ng-zorro-antd/card';
-
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  read: boolean;
-}
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 
 @Component({
   selector: 'app-books',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -24,31 +19,46 @@ interface Book {
     NzButtonModule,
     NzInputModule,
     NzCheckboxModule,
-    NzCardModule
+    NzCardModule,
   ],
   templateUrl: './books.component.html',
-  styleUrls: ['./books.component.scss']
+  styleUrls: ['./books.component.scss'],
 })
-export class BooksComponent {
-  books: Book[] = [
-    { id: '1', title: 'Harry Potter and the Philosopher\'s Stone', author: 'J.K. Rowling', read: false },
-    { id: '2', title: 'Green Eggs and Ham', author: 'Dr. Seuss', read: true }
-  ];
-
-  newBook: Book = { id: '', title: '', author: '', read: false };
-  selectedBook: Book | null = null;
+export class BooksComponent implements OnInit {
+  currentPage = 1;
+  pageSize = 3;
+  books: Book[] = [];
+  paginatedBooks: Book[] = [];
   showAddBookForm = false;
+  selectedBook: Book | null = null;
+  newBook: Omit<Book, 'id'> = { title: '', author: '', read: false };
+
+  constructor(private bookService: BookService, private notification: NzNotificationService) {}
+
+  ngOnInit(): void {
+    this.loadBooks();
+  }
+
+  loadBooks() {
+    this.bookService.getBooks().subscribe((data) => {
+      this.books = data;
+      this.updatePagination();
+    });
+  }
 
   toggleAddBookForm() {
     this.showAddBookForm = !this.showAddBookForm;
+    this.newBook = { title: '', author: '', read: false };
   }
 
   addBook() {
-    if (this.newBook.title && this.newBook.author) {
-      this.books.push({ ...this.newBook, id: Math.random().toString(36).substr(2, 9) });
-      this.newBook = { id: '', title: '', author: '', read: false };
-      this.showAddBookForm = false;
-    }
+    if (!this.newBook.title || !this.newBook.author) return;
+
+    this.bookService.addBook(this.newBook).subscribe(() => {
+      this.notification.success('✅ Success', '📚 Successfully added book', { nzPlacement: 'topLeft', nzDuration: 2000 });
+      this.loadBooks();
+      this.toggleAddBookForm();
+    });
   }
 
   editBook(book: Book) {
@@ -56,16 +66,30 @@ export class BooksComponent {
   }
 
   updateBook() {
-    if (this.selectedBook) {
-      const index = this.books.findIndex(b => b.id === this.selectedBook!.id);
-      if (index !== -1) {
-        this.books[index] = this.selectedBook;
-      }
+    if (!this.selectedBook) return;
+
+    this.bookService.updateBook(this.selectedBook).subscribe(() => {
+      this.notification.success('✅ Success', '✏️ Book updated correctly', { nzPlacement: 'topLeft', nzDuration: 2000 });
+      this.loadBooks();
       this.selectedBook = null;
-    }
+    });
   }
 
-  deleteBook(id: string) {
-    this.books = this.books.filter(book => book.id !== id);
+  deleteBook(bookId: string) {
+    this.bookService.deleteBook(bookId).subscribe(() => {
+      this.notification.success('✅ Success', '🗑️ Book successfully removed', { nzPlacement: 'topLeft', nzDuration: 2000 });
+      this.loadBooks();
+    });
+  }
+
+  onPageChange(pageIndex: number) {
+    this.currentPage = pageIndex;
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedBooks = this.books.slice(startIndex, endIndex);
   }
 }

@@ -1,14 +1,12 @@
 <nz-card [nzBordered]="true">
-  <h1 style="text-align: center; font-size: 40px;">
-    📚 Books
-  </h1>
+  <h1 style="text-align: center; font-size: 40px">📚 Books</h1>
 
   <div style="text-align: right; margin-bottom: 16px">
     <button
       nz-button
       nzType="primary"
       (click)="toggleAddBookForm()"
-      style="background-color: black;"
+      style="background-color: black"
     >
       ➕ Add Book
     </button>
@@ -16,11 +14,25 @@
 
   <div *ngIf="showAddBookForm" style="margin-bottom: 16px">
     <nz-input-group nzSize="large">
-      <input nz-input placeholder="Title" [(ngModel)]="newBook.title" />
+      <input
+        nz-input
+        placeholder="📖 Title"
+        [(ngModel)]="newBook.title"
+        class="custom-input"
+      />
     </nz-input-group>
     <nz-input-group nzSize="large" style="margin-top: 10px">
-      <input nz-input placeholder="Author" [(ngModel)]="newBook.author" />
+      <input
+        nz-input
+        placeholder="✍️ Author"
+        [(ngModel)]="newBook.author"
+        class="custom-input"
+      />
     </nz-input-group>
+    <label nz-checkbox [(ngModel)]="newBook.read" style="margin-top: 10px">
+      ✅ Read?
+    </label>
+    <br />
     <button
       nz-button
       nzType="primary"
@@ -39,8 +51,9 @@
     [nzBordered]="true"
     [nzData]="books"
     [nzSize]="'middle'"
+    [nzPageSize]="3"
+    (nzPageIndexChange)="onPageChange($event)"
     [nzShowPagination]="true"
-    [nzPageSize]="5"
   >
     <thead>
       <tr>
@@ -51,25 +64,18 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let book of books">
+      <tr *ngFor="let book of paginatedBooks">
         <td>{{ book.title }}</td>
         <td>{{ book.author }}</td>
-        <td>
-          <label nz-checkbox [(ngModel)]="book.read"></label>
+        <td class="checkbox-column">
+          <label nz-checkbox [(ngModel)]="book.read" nzDisabled="true"></label>
         </td>
-        <td>
-          <button
-            nz-button
-            nzType="default"
-            nzShape="round"
-            nzColor="green"
-            (click)="editBook(book)"
-          >
+        <td class="checkbox-column">
+          <button nz-button nzShape="round" (click)="editBook(book)">
             ✏️ Edit
           </button>
           <button
             nz-button
-            nzType="default"
             nzShape="round"
             nzDanger
             (click)="deleteBook(book.id)"
@@ -84,11 +90,25 @@
   <div *ngIf="selectedBook" style="margin-top: 16px">
     <h3 nz-typography nzTitle style="font-size: 20px">✏️ Edit Book</h3>
     <nz-input-group nzSize="large">
-      <input nz-input placeholder="Title" [(ngModel)]="selectedBook.title" />
+      <input
+        nz-input
+        placeholder="📖 Title"
+        [(ngModel)]="selectedBook.title"
+        class="custom-input"
+      />
     </nz-input-group>
     <nz-input-group nzSize="large" style="margin-top: 10px">
-      <input nz-input placeholder="Author" [(ngModel)]="selectedBook.author" />
+      <input
+        nz-input
+        placeholder="✍️ Author"
+        [(ngModel)]="selectedBook.author"
+        class="custom-input"
+      />
     </nz-input-group>
+    <label nz-checkbox [(ngModel)]="selectedBook.read" style="margin-top: 10px">
+      ✅ Read?
+    </label>
+    <br />
     <button
       nz-button
       nzType="primary"

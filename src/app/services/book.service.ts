@@ -1,30 +1,30 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { Book } from '../models/book.model';
-import { v4 as uuidv4 } from 'uuid';
+import { environment } from '../../environment/env';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BookService {
-  private books: Book[] = [
-    { id: uuidv4(), title: "Harry Potter and the Philosopher's Stone", author: "J.K. Rowling", read: false },
-    { id: uuidv4(), title: "Green Eggs and Ham", author: "Dr. Seuss", read: true }
-  ];
+  private apiUrl = environment.API_URL;
 
-  getBooks(): Book[] {
-    return this.books;
+  constructor(private http: HttpClient) {}
+
+  getBooks(): Observable<Book[]> {
+    return this.http.get<Book[]>(this.apiUrl);
   }
 
-  addBook(book: Book) {
-    this.books.push({ ...book, id: uuidv4() });
+  addBook(book: Omit<Book, 'id'>): Observable<Book> {
+    return this.http.post<Book>(this.apiUrl, book);
   }
 
-  updateBook(updatedBook: Book) {
-    const index = this.books.findIndex(b => b.id === updatedBook.id);
-    if (index !== -1) this.books[index] = updatedBook;
+  updateBook(book: Book): Observable<Book> {
+    return this.http.put<Book>(`${this.apiUrl}/${book.id}`, book);
   }
 
-  deleteBook(id: string) {
-    this.books = this.books.filter(book => book.id !== id);
+  deleteBook(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
